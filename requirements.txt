@@ -1,25 +1,7 @@
-
-# Environment & Config
-python-dotenv==1.1.0
-
-# Weaviate
+python-dotenv==1.0.0
 weaviate-client==4.17.0
-
-# ML & Transformers
-torch==2.4.1
 sentence-transformers==5.1.2
-bertopic==0.17.3
-
-# LangChain
-langchain==0.3.27
-langchain-groq==0.3.8
-langchain-core==0.3.76
-
-# Data Processing
-pandas==2.2.2
-numpy==1.26.4
-
-#fastmcp download
 fastmcp>=2.0.0
 uvicorn>=0.24.0
+
 
