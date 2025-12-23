@@ -3,7 +3,7 @@
 MCP Server for Weaviate RAG Pipeline using FastMCP 2
 Clean server implementation using decorator-based tool registration
 """
-
+import os
 from fastmcp import FastMCP
 
 # ============================================
@@ -30,4 +30,14 @@ tools.register_tools()
 # ============================================
 
 if __name__ == "__main__":
-    mcp.run()
+     port = int(os.getenv("PORT", 8000))
+    
+    # FastMCP runs on stdio by default, but we need SSE for remote access
+    # Use uvicorn to expose it as an HTTP server
+    import uvicorn
+    
+    mcp.run_server(
+        host="0.0.0.0",  # Listen on all interfaces
+        port=port,
+        log_level="info"
+    )
