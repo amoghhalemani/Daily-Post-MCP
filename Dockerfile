@@ -1,6 +1,6 @@
 FROM python:3.11-slim as builder
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     g++ \
@@ -9,18 +9,20 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY requirements.txt .
 
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /app/wheels /wheels
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && \
+    rm -rf /wheels
 
 COPY . .
 
-ENV PATH=/root/.local/bin:$PATH
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["python", "mcp_server.py"]
+CMD ["python", "your_server_file.py"]
