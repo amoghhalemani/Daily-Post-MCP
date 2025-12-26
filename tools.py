@@ -66,8 +66,12 @@ MODEL_DIMENSION = 768
 _model_load_attempted = False
 
 
+from transformers import AutoTokenizer, AutoModel
+import numpy as np
+import torch
+
 def _load_embedding_model():
-    """Lazy load the embedding model on first use"""
+    """Lazy load embedding model using transformers (lightweight)"""
     global EMBEDDING_MODEL, _model_load_attempted
     
     if EMBEDDING_MODEL is not None:
@@ -79,25 +83,32 @@ def _load_embedding_model():
     _model_load_attempted = True
     
     try:
-        print("📦 Loading SentenceTransformer model 'all-mpnet-base-v2'...")
-        EMBEDDING_MODEL = SentenceTransformer("all-mpnet-base-v2")
-        print("✅ Embedding model 'all-mpnet-base-v2' loaded successfully.")
+        print("📦 Loading lightweight embedding model...")
+        model_name = "sentence-transformers/all-MiniLM-L6-v2"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModel.from_pretrained(model_name)
+        EMBEDDING_MODEL = {"tokenizer": tokenizer, "model": model}
+        print("✅ Embedding model loaded successfully.")
         return EMBEDDING_MODEL
     except Exception as e:
-        print(f"🚨 ERROR: Could not load SentenceTransformer model. Error: {e}")
-        print("   Please run: pip install sentence-transformers")
+        print(f"🚨 ERROR: Could not load model. Error: {e}")
         EMBEDDING_MODEL = None
         raise RuntimeError(f"Failed to load embedding model: {e}")
 
 
-def get_embedding_for_query(text: str) -> List[float]:
-    """
-    Generates an embedding vector for a given text query.
-    Lazily loads the model on first call.
-    """
-    model = _load_embedding_model()
-    vector = model.encode(text)
-    return vector.tolist()
+def get_embedding_for_query(text: str) -> list:
+    """Generate embedding using lightweight model"""
+    model_dict = _load_embedding_model()
+    tokenizer = model_dict["tokenizer"]
+    model = model_dict["model"]
+    
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    
+    # Mean pooling
+    embeddings = outputs.last_hidden_state.mean(dim=1)
+    return embeddings[0].tolist()
 
 
 # -----------------------------
