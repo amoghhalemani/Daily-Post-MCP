@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+RUN pip install --no-cache-dir typing-extensions>=4.9.0
+
 COPY requirements.txt .
 
 RUN pip install torch==2.0.0+cpu --index-url https://download.pytorch.org/whl/cpu
