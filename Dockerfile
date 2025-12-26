@@ -25,4 +25,4 @@ COPY . .
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["python", "your_server_file.py"]
+CMD ["python", "mcp_server.py"]
