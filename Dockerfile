@@ -1,43 +1,30 @@
-# ==========================================
-# Stage 1: Builder (Compilers & Downloads)
-# ==========================================
-FROM python:3.11-slim as builder
-
-WORKDIR /app
-
-# Install git/build tools needed for pip
-RUN apt-get update && apt-get install -y git
-
-# Install dependencies into a specific location
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
-
-# Download the model to a specific cache directory
-ENV HF_HOME=/app/model_cache
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2')"
-
-# ==========================================
-# Stage 2: Runtime (Clean & Minimal)
-# ==========================================
+# Use a standard lightweight Python image
 FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-# Copy installed python packages from builder
-COPY --from=builder /install /usr/local
+# Install system dependencies (git is sometimes needed for certain pip packages)
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
-# Copy the downloaded model cache from builder
-COPY --from=builder /app/model_cache /root/.cache/huggingface
+# Copy requirements first
+COPY requirements.txt .
 
-# Copy app code
+# Install Python dependencies globally
+# This ensures python can find 'sentence_transformers' immediately
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download the model (Now this will work because the package is installed)
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-mpnet-base-v2')"
+
+# Copy the rest of your application code
 COPY . .
 
-# Create the style guide file
+# Create the style guide file to prevent startup errors
 RUN touch sanjay_sahay_style.txt
 
+# Expose the port
 EXPOSE 8080
 
-# Environment variable to ensure model finds the cached files
-ENV HF_HOME=/root/.cache/huggingface
-
+# Run the server
 CMD ["python", "mcp_server.py"]
