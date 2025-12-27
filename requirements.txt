@@ -1,7 +1,5 @@
-python-dotenv>=1.0.0
-weaviate-client>=4.17.0
-sentence-transformers>=5.1.2
+fastmcp
+weaviate-client>=4.0.0
+sentence-transformers
+uvicorn
 fastapi
-fastmcp>=2.0.0
-uvicorn>=0.24.0
-
